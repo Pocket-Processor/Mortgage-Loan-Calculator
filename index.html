@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mortgage Calculator</title>
+  <style>
+/* ===== CSS Variables & Reset ===== */
+:root {
+  --bg: #f0f2f5;
+  --card-bg: #ffffff;
+  --primary: #1a56db;
+  --primary-light: #e8effc;
+  --accent: #0e9f6e;
+  --accent-light: #def7ec;
+  --danger: #e02424;
+  --danger-light: #fde8e8;
+  --text: #1f2937;
+  --text-muted: #6b7280;
+  --border: #d1d5db;
+  --border-light: #e5e7eb;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.1);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: 'Cascadia Code', 'Fira Code', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 15px; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ===== Header ===== */
+header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #1a56db 100%);
+  color: #fff;
+  padding: 1.5rem 1rem 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.subtitle {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin-bottom: 0.75rem;
+}
+.toolbar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.9rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn .icon { font-size: 1rem; }
+.btn-secondary {
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.3);
+}
+.btn-secondary:hover { background: rgba(255,255,255,.25); }
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+.btn-danger:hover { background: #c81e1e; }
+.btn-sm {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+}
+.btn-add {
+  background: var(--primary-light);
+  color: var(--primary);
+  margin-top: 0.5rem;
+}
+.btn-add:hover { background: #d1dffa; }
+
+/* ===== Main Layout ===== */
+main {
+  max-width: 1200px;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ===== Cards ===== */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+}
+.card h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary-light);
+}
+.card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 1rem 0 0.5rem;
+}
+.card h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0.75rem 0 0.5rem;
+}
+
+/* ===== Form Fields ===== */
+.grid { display: grid; gap: 0.75rem 1.25rem; }
+.grid-2 { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+
+.field { display: flex; flex-direction: column; gap: 0.25rem; }
+.field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+input[type="number"],
+input[type="text"],
+select {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #4b5563;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: var(--font);
+  color: #f3f4f6;
+  background: #1f2937;
+  transition: border-color .15s, box-shadow .15s;
+  width: 100%;
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(26,86,219,.25);
+}
+input[type="number"] { font-family: var(--mono); }
+select option {
+  background: #1f2937;
+  color: #f3f4f6;
+}
+input.invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(224,36,36,.1);
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ===== Data Tables ===== */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+.data-table thead th {
+  background: var(--bg);
+  padding: 0.5rem 0.5rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  border-bottom: 2px solid var(--border-light);
+  white-space: nowrap;
+}
+.data-table tbody td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: middle;
+}
+.data-table tbody tr:hover { background: #f9fafb; }
+.data-table input[type="number"],
+.data-table input[type="text"],
+.data-table select {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.82rem;
+  border: 1px solid transparent;
+  background: #1f2937;
+  color: #f3f4f6;
+}
+.data-table input:hover,
+.data-table select:hover {
+  border-color: #4b5563;
+  background: #283548;
+}
+.data-table input:focus,
+.data-table select:focus {
+  border-color: var(--primary);
+  background: #283548;
+}
+.data-table input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.data-table .itemTotal {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+.data-table .liabPayment {
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+/* item tables column widths */
+.item-table th:nth-child(1) { width: 30px; }
+.item-table th:nth-child(2) { width: 30%; }
+.item-table th:nth-child(3) { width: 14%; }
+.item-table th:nth-child(4) { width: 10%; }
+.item-table th:nth-child(5) { width: 14%; }
+.item-table th:nth-child(6) { width: 14%; }
+.item-table th:nth-child(7) { width: 8%; }
+
+/* ===== Income / Liability Summaries ===== */
+.income-summary, .liability-summary {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  background: var(--primary-light);
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+}
+.income-summary strong, .liability-summary strong {
+  font-family: var(--mono);
+  color: var(--primary);
+}
+
+/* ===== Totals Bars ===== */
+.totals-bar {
+  background: var(--bg);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  margin-top: 0.75rem;
+}
+.totals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+.totals-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.totals-grid label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.totals-grid span {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+}
+.totals-grid .highlight span {
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+.grand-total {
+  background: linear-gradient(135deg, #1e3a5f, #1a56db);
+  margin-top: 1rem;
+}
+.grand-total h4 { color: rgba(255,255,255,.7); }
+.grand-total .totals-grid label { color: rgba(255,255,255,.7); }
+.grand-total .totals-grid span { color: #fff; }
+.grand-total .totals-grid .highlight span { color: #a7f3d0; font-size: 1.15rem; }
+
+/* ===== Results Dashboard ===== */
+.results-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.result-card h2 {
+  border-bottom-color: var(--accent-light);
+  color: var(--accent);
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.result-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+}
+.result-item label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.big-number {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+.result-item.accent {
+  background: var(--accent-light);
+}
+.result-item.accent .big-number { color: var(--accent); }
+.result-item.grand {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #065f46, #0e9f6e);
+}
+.result-item.grand label { color: rgba(255,255,255,.8); }
+.result-item.grand .big-number { color: #fff; font-size: 1.3rem; }
+
+.inline-edit {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 1.05rem;
+  max-width: 140px;
+  padding: 0.3rem 0.5rem;
+}
+
+/* Escrow Detail */
+.escrow-detail {
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+}
+.escrow-detail h4 { margin: 0 0 0.4rem; }
+.escrow-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.escrow-items > div {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+.escrow-items label:first-child {
+  min-width: 160px;
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.escrow-items span {
+  font-family: var(--mono);
+  font-weight: 600;
+  min-width: 80px;
+}
+.toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+/* ===== Cash to Close ===== */
+.cash-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.cash-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0;
+  font-size: 0.88rem;
+  border-bottom: 1px dashed var(--border-light);
+}
+.cash-row:last-child { border-bottom: none; }
+.cash-row .cash-value {
+  font-family: var(--mono);
+  font-weight: 600;
+}
+.cash-total {
+  background: var(--accent-light);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  margin-top: 0.25rem;
+}
+.cash-total .cash-value {
+  color: var(--accent);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* ===== Toast Notifications ===== */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: #1f2937;
+  color: #fff;
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-lg);
+  z-index: 999;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all .3s;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.toast.error { background: var(--danger); }
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .results-row {
+    grid-template-columns: 1fr;
+  }
+  .result-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  header h1 { font-size: 1.2rem; }
+  .toolbar { gap: 0.3rem; }
+  .btn { padding: 0.35rem 0.6rem; font-size: 0.72rem; }
+  main { padding: 0 0.5rem; }
+  .card { padding: 1rem; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .result-grid { grid-template-columns: 1fr; }
+  .totals-grid { grid-template-columns: 1fr 1fr; }
+  .data-table { font-size: 0.78rem; }
+  .escrow-items > div { flex-wrap: wrap; }
+}
+
+/* ===== Accessibility ===== */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111827;
+    --card-bg: #1f2937;
+    --text: #f3f4f6;
+    --text-muted: #9ca3af;
+    --border: #374151;
+    --border-light: #374151;
+    --primary-light: #1e3a5f;
+    --accent-light: #064e3b;
+    --danger-light: #7f1d1d;
+  }
+  .data-table input[type="number"],
+  .data-table input[type="text"],
+  .data-table select {
+    color: var(--text);
+  }
+  .data-table tbody tr:hover { background: #283548; }
+  input[type="number"], input[type="text"], select {
+    background: #111827;
+    color: #f3f4f6;
+    border-color: #4b5563;
+  }
+}
+
+/* ===== Summary / Cash-to-Close Table ===== */
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.summary-table td {
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+}
+.summary-table .text-right {
+  text-align: right;
+  font-family: var(--mono);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.summary-table .total-row td {
+  border-top: 2px solid var(--accent);
+  border-bottom: none;
+  padding-top: 0.6rem;
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+/* ===== Footer ===== */
+footer {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin-top: 1rem;
+}
+
+/* ===== Print ===== */
+@media print {
+  header { position: static; }
+  .toolbar, .btn-add { display: none; }
+  .card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+}
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <h1>Mortgage Calculator</h1>
+      <p class="subtitle">Complete Loan Estimate &amp; Closing Cost Worksheet</p>
+      <div class="toolbar">
+        <button id="btnImport" class="btn btn-secondary" title="Import XLSX or CSV"><span class="icon">&#8593;</span> Import</button>
+        <button id="btnExportXlsx" class="btn btn-secondary" title="Export as XLSX"><span class="icon">&#8595;</span> Export XLSX</button>
+        <button id="btnExportCsv" class="btn btn-secondary" title="Export as CSV"><span class="icon">&#8595;</span> Export CSV</button>
+        <button id="btnReset" class="btn btn-danger" title="Reset all fields">Reset</button>
+        <input type="file" id="fileInput" accept=".xlsx,.csv" hidden>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===================== LOAN TYPE & TERM ===================== -->
+    <section class="card" id="sectionLoan">
+      <h2>Loan Type &amp; Term</h2>
+      <div class="grid grid-2">
+        <div class="field">
+          <label for="loanType">Loan Type</label>
+          <select id="loanType">
+            <option value="FHA" selected>FHA</option>
+            <option value="Conventional">Conventional</option>
+            <option value="VA">VA</option>
+            <option value="USDA">USDA</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="amortType">Amortization Type</label>
+          <select id="amortType">
+            <option value="Fixed" selected>Fixed</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="interestRate">Interest Rate (%)</label>
+          <input type="number" id="interestRate" value="6.25" step="0.01" min="0" max="25">
+        </div>
+        <div class="field">
+          <label for="purchasePrice">Purchase Price ($)</label>
+          <input type="number" id="purchasePrice" value="312215" step="1" min="0">
+        </div>
+        <div class="field">
+          <label for="termMonths">Term (Months)</label>
+          <select id="termMonths">
+            <option value="360" selected>360</option>
+            <option value="180">180</option>
+          </select>
+          <span class="hint" id="termYears">30 Years</span>
+        </div>
+        <div class="field">
+          <label for="downPayment">Down Payment ($)</label>
+          <input type="number" id="downPayment" value="10928" step="1" min="0">
+          <span class="hint" id="downPct"></span>
+        </div>
+        <div class="field">
+          <label for="earnestMoney">Earnest Money Deposit (EMD) ($)</label>
+          <input type="number" id="earnestMoney" value="3000" step="1" min="0">
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== INCOME ===================== -->
+    <section class="card" id="sectionIncome">
+      <h2>Income</h2>
+      <div class="income-summary">
+        <span>Total Gross Monthly Income:</span>
+        <strong id="totalGrossIncome">$0.00</strong>
+      </div>
+      <table class="data-table" id="incomeTable">
+        <thead>
+          <tr>
+            <th style="width:50%">Income Type</th>
+            <th style="width:50%">Monthly Amount ($)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <select class="incomeType">
+                <option value="Employment" selected>Employment</option>
+                <option value="Federal (Alimony, Child Support, etc)">Federal (Alimony, Child Support, etc)</option>
+                <option value="Other">Other</option>
+              </select>
+            </td>
+            <td><input type="number" class="incomeAmt" value="9000" step="1" min="0"></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn btn-sm btn-add" id="addIncome">+ Add Income</button>
+    </section>
+
+    <!-- ===================== LIABILITIES ===================== -->
+    <section class="card" id="sectionLiabilities">
+      <h2>Liabilities</h2>
+      <div class="liability-summary">
+        <div><span>Total Balance:</span> <strong id="totalBalance">$0.00</strong></div>
+        <div><span>Total Monthly Debt Payments:</span> <strong id="totalDebt">$0.00</strong></div>
+      </div>
+      <table class="data-table" id="liabilityTable">
+        <thead>
+          <tr>
+            <th>Liability Type</th>
+            <th>Balance ($)</th>
+            <th>Months Left</th>
+            <th>Monthly Payment ($)</th>
+            <th>Paid Off</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <select class="liabType">
+                <option value="Alimony Payment">Alimony Payment</option>
+                <option value="Auto Loan" selected>Auto Loan</option>
+                <option value="Child Support Payment">Child Support Payment</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Federal Student Loan">Federal Student Loan</option>
+                <option value="Home Equity Loan">Home Equity Loan</option>
+                <option value="Installment Loan">Installment Loan</option>
+                <option value="Judgments or Liens">Judgments or Liens</option>
+                <option value="Lease Obligations">Lease Obligations</option>
+                <option value="Line of Credit">Line of Credit</option>
+                <option value="Mortgage on Other Properties">Mortgage on Other Properties</option>
+                <option value="Personal Loan">Personal Loan</option>
+                <option value="Private Student Loan">Private Student Loan</option>
+                <option value="Tax Liability">Tax Liability</option>
+                <option value="Other">Other</option>
+              </select>
+            </td>
+            <td><input type="number" class="liabBalance" value="9560" step="1" min="0"></td>
+            <td><input type="number" class="liabMonths" value="38" step="1" min="0"></td>
+            <td><span class="liabPayment">$0.00</span></td>
+            <td><input type="checkbox" class="liabPaidOff"></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn btn-sm btn-add" id="addLiability">+ Add Liability</button>
+    </section>
+
+    <!-- ===================== ITEMIZATION ===================== -->
+    <section class="card" id="sectionItemization">
+      <h2>Itemization</h2>
+
+      <!-- A. Origination Charges -->
+      <div class="subsection">
+        <h3>Estimates &ndash; Loan Costs</h3>
+        <h4>A. Origination Charges</h4>
+        <table class="data-table item-table" id="originationTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Description</th>
+              <th>Unit Cost ($)</th>
+              <th># Months</th>
+              <th>Cost Total ($)</th>
+              <th>Seller-Paid ($)</th>
+              <th title="Financed into Mortgage Loan">Financed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-key="orig1">
+              <td>1</td>
+              <td><input type="text" class="itemDesc" value="% of Loan Amount (Points)"></td>
+              <td><input type="number" class="itemCost" value="0" step="0.01" min="0"></td>
+              <td><input type="number" class="itemMonths" value="" step="1" min="0"></td>
+              <td><span class="itemTotal">$0.00</span></td>
+              <td><input type="number" class="itemSeller" value="0" step="0.01" min="0"></td>
+              <td><input type="checkbox" class="itemFinanced"></td>
+            </tr>
+            <tr data-key="orig2">
+              <td>2</td>
+              <td><input type="text" class="itemDesc" value="Administration Fee"></td>
+              <td><input type="number" class="itemCost" value="1500" step="0.01" min="0"></td>
+              <td><input type="number" class="itemMonths" value="" step="1" min="0"></td>
+              <td><span class="itemTotal">$0.00</span></td>
+              <td><input type="number" class="itemSeller" value="1500" step="0.01" min="0"></td>
+              <td><input type="checkbox" class="itemFinanced"></td>
+            </tr>
+            <tr data-key="orig3">
+              <td>3</td>
+              <td><input type="text" class="itemDesc" value="Processing Fees"></td>
+              <td><input type="number" class="itemCost" value="360" step="0.01" min="0"></td>
+              <td><input type="number" class="itemMonths" value="" step="1" min="0"></td>
+              <td><span class="itemTotal">$0.00</span></td>
+              <td><input type="number" class="itemSeller" value="360" step="0.01" min="0"></td>
+              <td><input type="checkbox" class="itemFinanced"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- B. Non-Shoppable Charges -->
+      <div class="subsection">
+        <h4>B. Non-Shoppable Charges</h4>
+        <table class="data-table item-table" id="nonShoppableTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Description</th>
+              <th>Unit Cost ($)</th>
+              <th># Months</th>
+              <th>Cost Total ($)</th>
+              <th>Seller-Paid ($)</th>
+              <th title="Financed into Mortgage Loan">Financed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td><input type="text" class="itemDesc" value="Appraisal Fee"></td><td><input type="number" class="itemCost" value="600" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="600" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>2</td><td><input type="text" class="itemDesc" value="Closing Coordination Fee"></td><td><input type="number" class="itemCost" value="81.50" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="81.50" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>3</td><td><input type="text" class="itemDesc" value="Credit Report"></td><td><input type="number" class="itemCost" value="274.98" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="274.98" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>4</td><td><input type="text" class="itemDesc" value="Document Preparation Fee"></td><td><input type="number" class="itemCost" value="260" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="260" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>5</td><td><input type="text" class="itemDesc" value="Inspection Fee"></td><td><input type="number" class="itemCost" value="150" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="150" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>6</td><td><input type="text" class="itemDesc" value="Mortgage Insurance Premium"></td><td><input type="number" class="itemCost" value="5272.52" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="0" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced" checked></td></tr>
+            <tr><td>7</td><td><input type="text" class="itemDesc" value="Tax Service"></td><td><input type="number" class="itemCost" value="85" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="85" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>8</td><td><input type="text" class="itemDesc" value="Technology Fee"></td><td><input type="number" class="itemCost" value="111" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="111" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- C. Shoppable Charges -->
+      <div class="subsection">
+        <h4>C. Shoppable Charges</h4>
+        <table class="data-table item-table" id="shoppableTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Description</th>
+              <th>Unit Cost ($)</th>
+              <th># Months</th>
+              <th>Cost Total ($)</th>
+              <th>Seller-Paid ($)</th>
+              <th title="Financed into Mortgage Loan">Financed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td><input type="text" class="itemDesc" value="Survey Fee"></td><td><input type="number" class="itemCost" value="450" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="450" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>2</td><td><input type="text" class="itemDesc" value="Title - Courier Fee"></td><td><input type="number" class="itemCost" value="15" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="15" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>3</td><td><input type="text" class="itemDesc" value="Title - E-Record Fee"></td><td><input type="number" class="itemCost" value="10.12" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="10.12" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>4</td><td><input type="text" class="itemDesc" value="Title - Escrow Fee"></td><td><input type="number" class="itemCost" value="500" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="500" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>5</td><td><input type="text" class="itemDesc" value="Title - Lender's Title Insurance"></td><td><input type="number" class="itemCost" value="1921" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="1921" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>6</td><td><input type="text" class="itemDesc" value="Title - Tax Certificates"></td><td><input type="number" class="itemCost" value="69" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="69" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>7</td><td><input type="text" class="itemDesc" value="Title - Title Endorsements"></td><td><input type="number" class="itemCost" value="268.55" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="268.55" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>8</td><td><input type="text" class="itemDesc" value="Title - TX-Guaranty Fee"></td><td><input type="number" class="itemCost" value="2" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="2" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- D. Total Estimated Loan Costs -->
+      <div class="subsection totals-bar">
+        <h4>D. Total Estimated Loan Costs</h4>
+        <div class="totals-grid">
+          <div><label>Loan Costs Total</label><span id="loanCostTotal">$0.00</span></div>
+          <div><label>Seller-Paid</label><span id="loanCostSeller">$0.00</span></div>
+          <div><label>Financed into Mortgage</label><span id="loanCostFinanced">$0.00</span></div>
+          <div class="highlight"><label>Loan Costs Subtotal</label><span id="loanCostSubtotal">$0.00</span></div>
+        </div>
+      </div>
+
+      <!-- OTHER COSTS -->
+      <div class="subsection">
+        <h3>Estimates &ndash; Other Costs</h3>
+
+        <!-- E. Taxes and Government Fees -->
+        <h4>E. Taxes and Other Government Fees</h4>
+        <table class="data-table item-table" id="taxGovTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Description</th>
+              <th>Unit Cost ($)</th>
+              <th># Months</th>
+              <th>Cost Total ($)</th>
+              <th>Seller-Paid ($)</th>
+              <th title="Financed into Mortgage Loan">Financed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td><input type="text" class="itemDesc" value="Recording Fees - Deed"></td><td><input type="number" class="itemCost" value="23" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="23" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>2</td><td><input type="text" class="itemDesc" value="Recording Fees - Mortgage"></td><td><input type="number" class="itemCost" value="71" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="71" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- F. Prepaids -->
+      <div class="subsection">
+        <h4>F. Prepaids</h4>
+        <table class="data-table item-table" id="prepaidsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Description</th>
+              <th>Unit Cost ($)</th>
+              <th># Months</th>
+              <th>Cost Total ($)</th>
+              <th>Seller-Paid ($)</th>
+              <th title="Financed into Mortgage Loan">Financed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td><input type="text" class="itemDesc" value="Homeowner's Insurance Premium (per 12 months)"></td><td><input type="number" class="itemCost" value="1578" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="1578" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>2</td><td><input type="text" class="itemDesc" value="Mortgage Insurance Premium"></td><td><input type="number" class="itemCost" value="0" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="0" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>3</td><td><input type="text" class="itemDesc" value="Prepaid Interest (per day)"></td><td><input type="number" class="itemCost" value="419.92" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="419.92" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>4</td><td><input type="text" class="itemDesc" value="Property Taxes"></td><td><input type="number" class="itemCost" value="0" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="0" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- G. Initial Escrow -->
+      <div class="subsection">
+        <h4>G. Initial Escrow Payment at Closing</h4>
+        <table class="data-table item-table" id="escrowTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Description</th>
+              <th>Unit Cost ($)</th>
+              <th># Months</th>
+              <th>Cost Total ($)</th>
+              <th>Seller-Paid ($)</th>
+              <th title="Financed into Mortgage Loan">Financed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td><input type="text" class="itemDesc" value="Homeowner's Insurance (per month)"></td><td><input type="number" class="itemCost" value="131.50" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="3" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="0" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>2</td><td><input type="text" class="itemDesc" value="Mortgage Insurance (per month)"></td><td><input type="number" class="itemCost" value="0" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="0" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>3</td><td><input type="text" class="itemDesc" value="Property Taxes (per month)"></td><td><input type="number" class="itemCost" value="680.14" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="4" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="2312.36" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- H. Other Costs -->
+      <div class="subsection">
+        <h4>H. Other</h4>
+        <table class="data-table item-table" id="otherCostsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Description</th>
+              <th>Unit Cost ($)</th>
+              <th># Months</th>
+              <th>Cost Total ($)</th>
+              <th>Seller-Paid ($)</th>
+              <th title="Financed into Mortgage Loan">Financed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td><input type="text" class="itemDesc" value="HOA CAP/Assessment Fee"></td><td><input type="number" class="itemCost" value="580" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="580" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>2</td><td><input type="text" class="itemDesc" value="HOA Lien Estoppel Fee"></td><td><input type="number" class="itemCost" value="508" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="508" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>3</td><td><input type="text" class="itemDesc" value="HOA Processing Fee"></td><td><input type="number" class="itemCost" value="150" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="150" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>4</td><td><input type="text" class="itemDesc" value="Prorated HOA Dues"></td><td><input type="number" class="itemCost" value="1555.40" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="1555.40" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>5</td><td><input type="text" class="itemDesc" value="Real Estate Commission"></td><td><input type="number" class="itemCost" value="9366.45" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="9366.45" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>6</td><td><input type="text" class="itemDesc" value="Title - Owner's Title Insurance (Optional)"></td><td><input type="number" class="itemCost" value="129" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="129" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+            <tr><td>7</td><td><input type="text" class="itemDesc" value="TX Guaranty Assessment Recoupment"></td><td><input type="number" class="itemCost" value="2" step="0.01" min="0"></td><td><input type="number" class="itemMonths" value="" step="1" min="0"></td><td><span class="itemTotal">$0.00</span></td><td><input type="number" class="itemSeller" value="2" step="0.01" min="0"></td><td><input type="checkbox" class="itemFinanced"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- I. Total Estimated Other Costs -->
+      <div class="subsection totals-bar">
+        <h4>I. Total Estimated Other Costs</h4>
+        <div class="totals-grid">
+          <div><label>Other Costs Total</label><span id="otherCostTotal">$0.00</span></div>
+          <div><label>Seller-Paid</label><span id="otherCostSeller">$0.00</span></div>
+          <div><label>Financed into Mortgage</label><span id="otherCostFinanced">$0.00</span></div>
+          <div class="highlight"><label>Other Costs Subtotal</label><span id="otherCostSubtotal">$0.00</span></div>
+        </div>
+      </div>
+
+      <!-- J. TOTALS -->
+      <div class="subsection totals-bar grand-total">
+        <h4>J. TOTALS</h4>
+        <div class="totals-grid">
+          <div><label>Cost Total (Loan + Other)</label><span id="grandCostTotal">$0.00</span></div>
+          <div><label>Seller-Paid Total</label><span id="grandSellerTotal">$0.00</span></div>
+          <div><label>Financed Total</label><span id="grandFinancedTotal">$0.00</span></div>
+          <div class="highlight"><label>Total Closing Costs (Borrower-Paid)</label><span id="totalClosingCosts">$0.00</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== RESULTS DASHBOARD ===================== -->
+    <div class="results-row">
+      <!-- Estimated Mortgage Loan Details -->
+      <section class="card result-card" id="sectionMortgageDetails">
+        <h2>Estimated Mortgage Loan Details</h2>
+        <div class="result-grid">
+          <div class="result-item">
+            <label>Loan Amount</label>
+            <span id="loanAmount" class="big-number">$0.00</span>
+          </div>
+          <div class="result-item">
+            <label>LTV</label>
+            <span id="ltv" class="big-number">0.00%</span>
+          </div>
+          <div class="result-item">
+            <label>DTI</label>
+            <span id="dti" class="big-number">0.00%</span>
+          </div>
+          <div class="result-item accent">
+            <label>Principal &amp; Interest</label>
+            <span id="principalInterest" class="big-number">$0.00</span>
+          </div>
+          <div class="result-item">
+            <label>Mortgage Insurance</label>
+            <input type="number" id="mortgageInsurance" value="137.36" step="0.01" min="0" class="inline-edit">
+          </div>
+          <div class="result-item">
+            <label>Escrow</label>
+            <span id="escrowPayment" class="big-number">$0.00</span>
+          </div>
+        </div>
+        <div class="escrow-detail">
+          <h4>Escrow Breakdown</h4>
+          <div class="escrow-items">
+            <div>
+              <label>Property Taxes</label>
+              <span id="escrowPropTax">$0.00</span>
+              <label class="toggle-label"><input type="checkbox" id="escrowPropTaxIncl" checked> Include</label>
+            </div>
+            <div>
+              <label>Homeowner's Insurance (HOI)</label>
+              <span id="escrowHOI">$0.00</span>
+              <label class="toggle-label"><input type="checkbox" id="escrowHOIIncl" checked> Include</label>
+            </div>
+          </div>
+        </div>
+        <div class="result-item grand accent">
+          <label>Estimated Total Monthly Payment</label>
+          <span id="totalMonthlyPayment" class="big-number">$0.00</span>
+        </div>
+      </section>
+
+      <!-- Right column -->
+      <div class="right-col">
+        <!-- Property Tax Calculator -->
+        <section class="card result-card" id="sectionPropTax">
+          <h2>Property Tax Calculator</h2>
+          <div class="field">
+            <label for="propAppraisedValue">Property Appraised Value or Sales Price ($)</label>
+            <input type="number" id="propAppraisedValue" value="306370" step="1" min="0">
+          </div>
+          <div class="result-item">
+            <label>80% of Property Value</label>
+            <span id="prop80Pct">$0.00</span>
+          </div>
+          <div class="field">
+            <label for="taxRate">Tax Rate (%)</label>
+            <input type="number" id="taxRate" value="3.33" step="0.01" min="0">
+          </div>
+          <div class="result-item">
+            <label>Estimated Annual Property Tax</label>
+            <span id="annualPropTax">$0.00</span>
+          </div>
+          <div class="result-item accent">
+            <label>Monthly Payment</label>
+            <span id="monthlyPropTax">$0.00</span>
+          </div>
+        </section>
+
+        <!-- Cash to Close -->
+        <section class="card result-card" id="sectionCashClose">
+          <h2>Calculating Cash to Close</h2>
+          <table class="data-table summary-table">
+            <tbody>
+              <tr><td>Total Closing Costs (J)</td><td id="ccClosingCosts" class="text-right">$0.00</td></tr>
+              <tr><td>Closing Costs Financed into Mortgage Loan</td><td id="ccFinanced" class="text-right">$0.00</td></tr>
+              <tr><td>Down Payment</td><td id="ccDownPayment" class="text-right">$0.00</td></tr>
+              <tr><td>Deposit (EMD)</td><td id="ccDeposit" class="text-right">$0.00</td></tr>
+              <tr class="total-row"><td><strong>Cash to Close</strong></td><td id="ccTotal" class="text-right"><strong>$0.00</strong></td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Mortgage Calculator &mdash; All calculations are estimates for informational purposes only.</p>
+  </footer>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+/**
+ * Mortgage Calculator – Complete Application
+ * Implements all Excel formulas, dynamic rows, validation, import/export.
+ * Converted from Mortgage Calculator Sample.xlsx
+ */
+
+// ===== Utility Helpers =====
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => [...document.querySelectorAll(sel)];
+const money = (v) => {
+  const n = parseFloat(v) || 0;
+  return n < 0
+    ? `-$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    : `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+const pct = (v) => `${(parseFloat(v) * 100).toFixed(2)}%`;
+const num = (el) => parseFloat(el?.value ?? el) || 0;
+
+// ===== PMT Function (Excel PMT equivalent) =====
+function PMT(rate, nper, pv) {
+  if (rate === 0) return nper === 0 ? 0 : -pv / nper;
+  const x = Math.pow(1 + rate, nper);
+  return -(pv * rate * x) / (x - 1);
+}
+
+// ===== Toast Notification =====
+let toastTimer;
+function showToast(msg, isError = false) {
+  const toast = $('#toast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.toggle('error', isError);
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ===== Collect values from an itemization table =====
+function collectItemTable(tableId) {
+  const rows = $$(`#${tableId} tbody tr`);
+  let costTotal = 0, sellerTotal = 0, financedTotal = 0;
+  rows.forEach((row) => {
+    const unitCost = num(row.querySelector('.itemCost'));
+    const monthsInput = row.querySelector('.itemMonths');
+    const months = monthsInput && monthsInput.value !== '' ? num(monthsInput) : null;
+    const total = months !== null ? unitCost * months : unitCost;
+    const seller = num(row.querySelector('.itemSeller'));
+    const financed = row.querySelector('.itemFinanced')?.checked ? true : false;
+
+    const totalSpan = row.querySelector('.itemTotal');
+    if (totalSpan) totalSpan.textContent = money(total);
+
+    costTotal += total;
+    sellerTotal += seller;
+    if (financed) financedTotal += total;
+  });
+  return { costTotal, sellerTotal, financedTotal };
+}
+
+// ===== Main Recalculation =====
+function recalculate() {
+  // --- Loan Type & Term ---
+  const termMonths = num($('#termMonths'));
+  const termYearsEl = $('#termYears');
+  if (termMonths === 360) termYearsEl.textContent = '30 Years';
+  else if (termMonths === 180) termYearsEl.textContent = '15 Years';
+  else termYearsEl.textContent = '';
+
+  const purchasePrice = num($('#purchasePrice'));
+  const downPayment = num($('#downPayment'));
+  const earnestMoney = num($('#earnestMoney'));
+  const interestRate = num($('#interestRate')) / 100;
+
+  // Down payment percentage: =IFERROR(C8/C6,"")
+  const downPctEl = $('#downPct');
+  if (purchasePrice > 0) {
+    downPctEl.textContent = `${((downPayment / purchasePrice) * 100).toFixed(2)}%`;
+  } else {
+    downPctEl.textContent = '';
+  }
+
+  // --- Income ---
+  // F11: =SUM(C12:C16)
+  let totalGrossIncome = 0;
+  $$('#incomeTable .incomeAmt').forEach((inp) => {
+    totalGrossIncome += num(inp);
+  });
+  $('#totalGrossIncome').textContent = money(totalGrossIncome);
+
+  // --- Liabilities ---
+  // E19: =IF(OR(ISBLANK(C19),ISBLANK(D19)),0,C19/D19)
+  // I18: =SUMIF(F19:F26, FALSE, C19:C26)  (Total Balance of unpaid)
+  // I20: =SUMIF(F19:F26, FALSE, E19:E26)  (Total Monthly Debt of unpaid)
+  let totalBalance = 0;
+  let totalDebt = 0;
+  $$('#liabilityTable tbody tr').forEach((row) => {
+    const balance = num(row.querySelector('.liabBalance'));
+    const months = num(row.querySelector('.liabMonths'));
+    const paidOff = row.querySelector('.liabPaidOff')?.checked;
+    const balVal = row.querySelector('.liabBalance')?.value;
+    const monVal = row.querySelector('.liabMonths')?.value;
+
+    // IF(OR(ISBLANK(C),ISBLANK(D)),0,C/D)
+    let payment = 0;
+    if (balVal && monVal && months > 0) {
+      payment = balance / months;
+    }
+
+    const paymentSpan = row.querySelector('.liabPayment');
+    if (paymentSpan) paymentSpan.textContent = money(payment);
+
+    // SUMIF: only include if NOT paid off
+    if (!paidOff) {
+      totalBalance += balance;
+      totalDebt += payment;
+    }
+  });
+  $('#totalBalance').textContent = money(totalBalance);
+  $('#totalDebt').textContent = money(totalDebt);
+
+  // --- Itemization: Loan Costs (A + B + C) ---
+  const origination = collectItemTable('originationTable');
+  const nonShoppable = collectItemTable('nonShoppableTable');
+  const shoppable = collectItemTable('shoppableTable');
+
+  // D. Total Estimated Loan Costs
+  // F52: =SUM(F30:F50)
+  const loanCostTotal = origination.costTotal + nonShoppable.costTotal + shoppable.costTotal;
+  // G52: =SUM(G30:G50)
+  const loanSellerTotal = origination.sellerTotal + nonShoppable.sellerTotal + shoppable.sellerTotal;
+  // H52: =SUMIF(H30:H50, TRUE, F30:F50)
+  const loanFinancedTotal = origination.financedTotal + nonShoppable.financedTotal + shoppable.financedTotal;
+  // F53: =F52-G52-H52
+  const loanCostSubtotal = loanCostTotal - loanSellerTotal - loanFinancedTotal;
+
+  $('#loanCostTotal').textContent = money(loanCostTotal);
+  $('#loanCostSeller').textContent = money(loanSellerTotal);
+  $('#loanCostFinanced').textContent = money(loanFinancedTotal);
+  $('#loanCostSubtotal').textContent = money(loanCostSubtotal);
+
+  // --- Itemization: Other Costs (E + F + G + H) ---
+  const taxGov = collectItemTable('taxGovTable');
+  const prepaids = collectItemTable('prepaidsTable');
+  const escrowItems = collectItemTable('escrowTable');
+  const otherItems = collectItemTable('otherCostsTable');
+
+  // I. Total Estimated Other Costs
+  // F76: =SUM(F56:F74)
+  const otherCostTotal = taxGov.costTotal + prepaids.costTotal + escrowItems.costTotal + otherItems.costTotal;
+  // G76: =SUM(G56:G74)
+  const otherSellerTotal = taxGov.sellerTotal + prepaids.sellerTotal + escrowItems.sellerTotal + otherItems.sellerTotal;
+  // H76: =SUMIF(H56:H74, TRUE, F56:F74)
+  const otherFinancedTotal = taxGov.financedTotal + prepaids.financedTotal + escrowItems.financedTotal + otherItems.financedTotal;
+  // F77: =F76-G76-H76
+  const otherCostSubtotal = otherCostTotal - otherSellerTotal - otherFinancedTotal;
+
+  $('#otherCostTotal').textContent = money(otherCostTotal);
+  $('#otherCostSeller').textContent = money(otherSellerTotal);
+  $('#otherCostFinanced').textContent = money(otherFinancedTotal);
+  $('#otherCostSubtotal').textContent = money(otherCostSubtotal);
+
+  // --- J. TOTALS ---
+  // F80: =SUM(F53, F77) — Subtotals
+  const grandSubtotal = loanCostSubtotal + otherCostSubtotal;
+  // G80: =SUM(G52, G76) — Seller-Paid Total
+  const grandSellerTotal = loanSellerTotal + otherSellerTotal;
+  // H80: =SUM(H52, H76) — Financed Total
+  const grandFinancedTotal = loanFinancedTotal + otherFinancedTotal;
+  // F81: =SUM(F80+H80) — Total Closing Costs (Borrower-Paid)
+  const totalClosingCosts = grandSubtotal + grandFinancedTotal;
+
+  $('#grandCostTotal').textContent = money(grandSubtotal);
+  $('#grandSellerTotal').textContent = money(grandSellerTotal);
+  $('#grandFinancedTotal').textContent = money(grandFinancedTotal);
+  $('#totalClosingCosts').textContent = money(totalClosingCosts);
+
+  // --- Estimated Mortgage Loan Details ---
+  // C84: =(C6-C8)+H80  →  Loan Amount = (PurchasePrice - DownPayment) + Financed Total
+  const loanAmount = (purchasePrice - downPayment) + grandFinancedTotal;
+  $('#loanAmount').textContent = money(loanAmount);
+
+  // C86: =IFERROR(C84/C6,0)  →  LTV
+  const ltv = purchasePrice > 0 ? loanAmount / purchasePrice : 0;
+  $('#ltv').textContent = pct(ltv);
+
+  // C88: =IFERROR(I20/F11,0)  →  DTI
+  const dti = totalGrossIncome > 0 ? totalDebt / totalGrossIncome : 0;
+  $('#dti').textContent = pct(dti);
+
+  // F84: =IFERROR(PMT(C5/12,C7,-C84),0)  →  Principal & Interest
+  const monthlyRate = interestRate / 12;
+  const pi = termMonths > 0 ? PMT(monthlyRate, termMonths, -loanAmount) : 0;
+  $('#principalInterest').textContent = money(pi);
+
+  // F86: Mortgage Insurance (manual input field)
+  const mi = num($('#mortgageInsurance'));
+
+  // Escrow components from escrow table
+  // F89: =D66 → Property Taxes per month (row 3 of escrow table)
+  // F90: =D64 → Homeowner's Insurance per month (row 1 of escrow table)
+  const escrowRows = $$('#escrowTable tbody tr');
+  const hoiPerMonth = escrowRows.length >= 1 ? num(escrowRows[0].querySelector('.itemCost')) : 0;
+  const propTaxPerMonth = escrowRows.length >= 3 ? num(escrowRows[2].querySelector('.itemCost')) : 0;
+
+  $('#escrowPropTax').textContent = money(propTaxPerMonth);
+  $('#escrowHOI').textContent = money(hoiPerMonth);
+
+  // F88: =SUMIF(G89:G90, TRUE, F89:F90) → Escrow total based on include toggles
+  let escrowTotal = 0;
+  if ($('#escrowPropTaxIncl').checked) escrowTotal += propTaxPerMonth;
+  if ($('#escrowHOIIncl').checked) escrowTotal += hoiPerMonth;
+  $('#escrowPayment').textContent = money(escrowTotal);
+
+  // F91: =SUM(F84,F86,F88) → Estimated Total Monthly Payment
+  const totalMonthly = pi + mi + escrowTotal;
+  $('#totalMonthlyPayment').textContent = money(totalMonthly);
+
+  // --- Property Tax Calculator ---
+  // F94: Property Appraised Value (input)
+  const propValue = num($('#propAppraisedValue'));
+  // F95: =IFERROR(F94*0.8,0)
+  const prop80 = propValue * 0.8;
+  // F96: Tax rate (input, stored as percentage)
+  const taxRateVal = num($('#taxRate')) / 100;
+  // F97: =F96*F95
+  const annualTax = taxRateVal * prop80;
+  // F98: =IFERROR(F97/12,0)
+  const monthlyTax = annualTax / 12;
+
+  $('#prop80Pct').textContent = money(prop80);
+  $('#annualPropTax').textContent = money(annualTax);
+  $('#monthlyPropTax').textContent = money(monthlyTax);
+
+  // --- Cash to Close ---
+  // C94: =F81 → Total Closing Costs
+  const cashClosingCosts = totalClosingCosts;
+  // C95: =H80*-1 → Closing Costs Financed (negative)
+  const cashFinanced = -grandFinancedTotal;
+  // C96: =C8 → Down Payment
+  const cashDown = downPayment;
+  // C97: =C9*-1 → Deposit (negative)
+  const cashDeposit = -earnestMoney;
+  // C98: =SUM(C94:C97)
+  const cashToClose = cashClosingCosts + cashFinanced + cashDown + cashDeposit;
+
+  $('#ccClosingCosts').textContent = money(cashClosingCosts);
+  $('#ccFinanced').textContent = money(cashFinanced);
+  $('#ccDownPayment').textContent = money(cashDown);
+  $('#ccDeposit').textContent = money(cashDeposit);
+  $('#ccTotal').innerHTML = `<strong>${money(cashToClose)}</strong>`;
+}
+
+// ===== Dynamic Row Addition =====
+function addIncomeRow() {
+  const tbody = $('#incomeTable tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>
+      <select class="incomeType">
+        <option value="Employment">Employment</option>
+        <option value="Federal (Alimony, Child Support, etc)">Federal (Alimony, Child Support, etc)</option>
+        <option value="Other">Other</option>
+      </select>
+    </td>
+    <td><input type="number" class="incomeAmt" value="0" step="1" min="0"></td>
+  `;
+  tbody.appendChild(tr);
+  bindInputs();
+  recalculate();
+}
+
+function addLiabilityRow() {
+  const tbody = $('#liabilityTable tbody');
+  const tr = document.createElement('tr');
+  const typeOptions = [
+    'Alimony Payment','Auto Loan','Child Support Payment','Credit Card',
+    'Federal Student Loan','Home Equity Loan','Installment Loan',
+    'Judgments or Liens','Lease Obligations','Line of Credit',
+    'Mortgage on Other Properties','Personal Loan','Private Student Loan',
+    'Tax Liability','Other'
+  ].map(t => `<option value="${t}">${t}</option>`).join('');
+  tr.innerHTML = `
+    <td><select class="liabType">${typeOptions}</select></td>
+    <td><input type="number" class="liabBalance" value="0" step="1" min="0"></td>
+    <td><input type="number" class="liabMonths" value="0" step="1" min="0"></td>
+    <td><span class="liabPayment">$0.00</span></td>
+    <td><input type="checkbox" class="liabPaidOff"></td>
+  `;
+  tbody.appendChild(tr);
+  bindInputs();
+  recalculate();
+}
+
+// ===== Input Binding =====
+function bindInputs() {
+  const allInputs = $$('input, select');
+  allInputs.forEach((el) => {
+    el.removeEventListener('input', recalculate);
+    el.removeEventListener('change', recalculate);
+    el.addEventListener('input', recalculate);
+    el.addEventListener('change', recalculate);
+  });
+}
+
+// ===== Validation =====
+function validateInputs() {
+  let valid = true;
+  $$('input[type="number"]').forEach((inp) => {
+    inp.classList.remove('invalid');
+    if (inp.value !== '' && (isNaN(inp.value) || (inp.min && parseFloat(inp.value) < parseFloat(inp.min)))) {
+      inp.classList.add('invalid');
+      valid = false;
+    }
+  });
+  return valid;
+}
+
+// ===== Reset =====
+function resetAll() {
+  if (!confirm('Reset all fields to default values?')) return;
+  location.reload();
+}
+
+// ================================================================
+//  IMPORT / EXPORT (requires SheetJS CDN)
+// ================================================================
+
+function collectAllData() {
+  const data = {};
+  data.loanType = $('#loanType').value;
+  data.amortType = $('#amortType').value;
+  data.interestRate = num($('#interestRate'));
+  data.purchasePrice = num($('#purchasePrice'));
+  data.termMonths = num($('#termMonths'));
+  data.downPayment = num($('#downPayment'));
+  data.earnestMoney = num($('#earnestMoney'));
+
+  data.income = [];
+  $$('#incomeTable tbody tr').forEach((row) => {
+    data.income.push({
+      type: row.querySelector('.incomeType')?.value || '',
+      amount: num(row.querySelector('.incomeAmt'))
+    });
+  });
+
+  data.liabilities = [];
+  $$('#liabilityTable tbody tr').forEach((row) => {
+    data.liabilities.push({
+      type: row.querySelector('.liabType')?.value || '',
+      balance: num(row.querySelector('.liabBalance')),
+      monthsLeft: num(row.querySelector('.liabMonths')),
+      paidOff: row.querySelector('.liabPaidOff')?.checked || false
+    });
+  });
+
+  const tableIds = [
+    'originationTable', 'nonShoppableTable', 'shoppableTable',
+    'taxGovTable', 'prepaidsTable', 'escrowTable', 'otherCostsTable'
+  ];
+  tableIds.forEach((tid) => {
+    data[tid] = [];
+    $$(`#${tid} tbody tr`).forEach((row) => {
+      data[tid].push({
+        description: row.querySelector('.itemDesc')?.value || '',
+        unitCost: num(row.querySelector('.itemCost')),
+        months: row.querySelector('.itemMonths')?.value || '',
+        sellerPaid: num(row.querySelector('.itemSeller')),
+        financed: row.querySelector('.itemFinanced')?.checked || false
+      });
+    });
+  });
+
+  data.mortgageInsurance = num($('#mortgageInsurance'));
+  data.escrowPropTaxIncl = $('#escrowPropTaxIncl').checked;
+  data.escrowHOIIncl = $('#escrowHOIIncl').checked;
+  data.propAppraisedValue = num($('#propAppraisedValue'));
+  data.taxRate = num($('#taxRate'));
+
+  return data;
+}
+
+// ===== EXPORT AS XLSX =====
+function exportXLSX() {
+  if (typeof XLSX === 'undefined') {
+    showToast('SheetJS library not loaded. Check your connection.', true);
+    return;
+  }
+  const data = collectAllData();
+  const wb = XLSX.utils.book_new();
+  const calcRows = [];
+
+  calcRows.push(['Loan Type & Term']);
+  calcRows.push(['Loan Type:', data.loanType]);
+  calcRows.push(['Amortization Type:', data.amortType]);
+  calcRows.push(['Interest Rate:', data.interestRate / 100]);
+  calcRows.push(['Purchase Price:', data.purchasePrice]);
+  calcRows.push(['Term (Months):', data.termMonths]);
+  calcRows.push(['Down Payment:', data.downPayment]);
+  calcRows.push(['Earnest Money Deposit (EMD):', data.earnestMoney]);
+  calcRows.push([]);
+
+  calcRows.push(['Income']);
+  calcRows.push(['Income Type', 'Monthly Amount']);
+  data.income.forEach((i) => calcRows.push([i.type, i.amount]));
+  calcRows.push(['', '', 'Total Gross Monthly Income:', data.income.reduce((s, i) => s + i.amount, 0)]);
+  calcRows.push([]);
+
+  calcRows.push(['Liabilities']);
+  calcRows.push(['Liability Type', 'Balance', 'Months Left', 'Monthly Payment', 'Paid Off']);
+  data.liabilities.forEach((l) => {
+    const pmt = l.monthsLeft > 0 ? l.balance / l.monthsLeft : 0;
+    calcRows.push([l.type, l.balance, l.monthsLeft, pmt, l.paidOff]);
+  });
+  calcRows.push([]);
+
+  const sectionMap = [
+    { key: 'originationTable', title: 'A. Origination Charges' },
+    { key: 'nonShoppableTable', title: 'B. Non-Shoppable Charges' },
+    { key: 'shoppableTable', title: 'C. Shoppable Charges' },
+    { key: 'taxGovTable', title: 'E. Taxes and Other Government Fees' },
+    { key: 'prepaidsTable', title: 'F. Prepaids' },
+    { key: 'escrowTable', title: 'G. Initial Escrow Payment at Closing' },
+    { key: 'otherCostsTable', title: 'H. Other' }
+  ];
+
+  calcRows.push(['Itemization']);
+  sectionMap.forEach(({ key, title }) => {
+    calcRows.push([title]);
+    calcRows.push(['#', 'Description', 'Unit Cost', '# Months', 'Cost Total', 'Seller-Paid', 'Financed']);
+    data[key].forEach((item, i) => {
+      const months = item.months !== '' ? parseFloat(item.months) : null;
+      const total = months !== null ? item.unitCost * months : item.unitCost;
+      calcRows.push([i + 1, item.description, item.unitCost, item.months, total, item.sellerPaid, item.financed]);
+    });
+    calcRows.push([]);
+  });
+
+  calcRows.push(['Estimated Mortgage Loan Details']);
+  calcRows.push(['Loan Amount:', $('#loanAmount').textContent]);
+  calcRows.push(['LTV:', $('#ltv').textContent]);
+  calcRows.push(['DTI:', $('#dti').textContent]);
+  calcRows.push(['Principal & Interest:', $('#principalInterest').textContent]);
+  calcRows.push(['Mortgage Insurance:', data.mortgageInsurance]);
+  calcRows.push(['Escrow:', $('#escrowPayment').textContent]);
+  calcRows.push(['Total Monthly Payment:', $('#totalMonthlyPayment').textContent]);
+  calcRows.push([]);
+
+  calcRows.push(['Property Tax Calculator']);
+  calcRows.push(['Appraised Value:', data.propAppraisedValue]);
+  calcRows.push(['80% of Value:', $('#prop80Pct').textContent]);
+  calcRows.push(['Tax Rate:', data.taxRate / 100]);
+  calcRows.push(['Annual Tax:', $('#annualPropTax').textContent]);
+  calcRows.push(['Monthly Tax:', $('#monthlyPropTax').textContent]);
+  calcRows.push([]);
+
+  calcRows.push(['Cash to Close']);
+  calcRows.push(['Total Closing Costs:', $('#ccClosingCosts').textContent]);
+  calcRows.push(['Financed into Mortgage:', $('#ccFinanced').textContent]);
+  calcRows.push(['Down Payment:', $('#ccDownPayment').textContent]);
+  calcRows.push(['Deposit:', $('#ccDeposit').textContent]);
+  calcRows.push(['Cash to Close:', $('#ccTotal').textContent]);
+
+  const ws = XLSX.utils.aoa_to_sheet(calcRows);
+  XLSX.utils.book_append_sheet(wb, ws, 'Calculator');
+
+  const optRows = [
+    ['Loan Type', 'Amortization Type', 'Term', 'Liability Type', 'Income Type'],
+    ['Conventional', 'Fixed', 360, 'Alimony Payment', 'Employment'],
+    ['FHA', '', 180, 'Auto Loan', 'Federal (Alimony, Child Support, etc)'],
+    ['VA', '', '', 'Child Support Payment', 'Other'],
+    ['USDA', '', '', 'Credit Card', ''],
+    ['', '', '', 'Federal Student Loan', ''],
+    ['', '', '', 'Home Equity Loan', ''],
+    ['', '', '', 'Installment Loan', ''],
+    ['', '', '', 'Judgments or Liens', ''],
+    ['', '', '', 'Lease Obligations', ''],
+    ['', '', '', 'Line of Credit', ''],
+    ['', '', '', 'Mortgage on Other Properties', ''],
+    ['', '', '', 'Personal Loan', ''],
+    ['', '', '', 'Private Student Loan', ''],
+    ['', '', '', 'Tax Liability', ''],
+    ['', '', '', 'Other', '']
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(optRows);
+  XLSX.utils.book_append_sheet(wb, ws2, 'Selectable Options');
+
+  XLSX.writeFile(wb, 'Mortgage_Calculator_Export.xlsx');
+  showToast('Exported as XLSX successfully!');
+}
+
+// ===== EXPORT AS CSV =====
+function exportCSV() {
+  if (typeof XLSX === 'undefined') {
+    showToast('SheetJS library not loaded. Check your connection.', true);
+    return;
+  }
+  const data = collectAllData();
+  const rows = [];
+  rows.push(['Section', 'Field', 'Value']);
+  rows.push(['Loan', 'Loan Type', data.loanType]);
+  rows.push(['Loan', 'Amortization Type', data.amortType]);
+  rows.push(['Loan', 'Interest Rate (%)', data.interestRate]);
+  rows.push(['Loan', 'Purchase Price', data.purchasePrice]);
+  rows.push(['Loan', 'Term (Months)', data.termMonths]);
+  rows.push(['Loan', 'Down Payment', data.downPayment]);
+  rows.push(['Loan', 'Earnest Money Deposit', data.earnestMoney]);
+
+  data.income.forEach((i, idx) => {
+    rows.push(['Income', `${i.type} (#${idx + 1})`, i.amount]);
+  });
+  data.liabilities.forEach((l, idx) => {
+    rows.push(['Liability', `${l.type} (#${idx + 1}) Balance`, l.balance]);
+    rows.push(['Liability', `${l.type} (#${idx + 1}) Months Left`, l.monthsLeft]);
+    rows.push(['Liability', `${l.type} (#${idx + 1}) Paid Off`, l.paidOff]);
+  });
+
+  const sectionKeys = [
+    { key: 'originationTable', name: 'Origination' },
+    { key: 'nonShoppableTable', name: 'Non-Shoppable' },
+    { key: 'shoppableTable', name: 'Shoppable' },
+    { key: 'taxGovTable', name: 'Tax/Gov Fees' },
+    { key: 'prepaidsTable', name: 'Prepaids' },
+    { key: 'escrowTable', name: 'Escrow' },
+    { key: 'otherCostsTable', name: 'Other Costs' }
+  ];
+  sectionKeys.forEach(({ key, name }) => {
+    data[key].forEach((item) => {
+      rows.push([name, item.description, item.unitCost, item.months, item.sellerPaid, item.financed]);
+    });
+  });
+  rows.push(['Results', 'Total Monthly Payment', $('#totalMonthlyPayment').textContent]);
+  rows.push(['Results', 'Cash to Close', $('#ccTotal').textContent]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const csv = XLSX.utils.sheet_to_csv(ws);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'Mortgage_Calculator_Export.csv';
+  link.click();
+  URL.revokeObjectURL(link.href);
+  showToast('Exported as CSV successfully!');
+}
+
+// ===== IMPORT XLSX / CSV =====
+function importFile(file) {
+  if (typeof XLSX === 'undefined') {
+    showToast('SheetJS library not loaded. Check your connection.', true);
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      let mode = '';
+      let itemSection = '';
+      let itemIdx = 0;
+
+      const tableMap = {
+        'A. Origination Charges': 'originationTable',
+        'B. Non-Shoppable Charges': 'nonShoppableTable',
+        'B. Non - Shoppable Charges': 'nonShoppableTable',
+        'C. Shoppable Charges': 'shoppableTable',
+        'E. Taxes and Other Government Fees': 'taxGovTable',
+        'F. Prepaids': 'prepaidsTable',
+        'G. Initial Escrow Payment at Closing': 'escrowTable',
+        'H. Other': 'otherCostsTable'
+      };
+
+      json.forEach((row) => {
+        if (!row || row.length === 0) return;
+        const first = String(row[0]).trim();
+        const second = String(row[1] || '').trim();
+
+        if (first === 'Loan Type & Term') { mode = 'loan'; return; }
+        if (first === 'Income') { mode = 'income'; return; }
+        if (first === 'Liabilities') { mode = 'liabilities'; return; }
+        if (first === 'Itemization') { mode = 'itemization'; return; }
+        if (tableMap[first]) { itemSection = tableMap[first]; itemIdx = 0; return; }
+        if (first === 'Income Type' || first === 'Liability Type' || first === '#') return;
+
+        if (mode === 'loan') {
+          if (first.startsWith('Loan Type')) { if (second) $('#loanType').value = second; }
+          else if (first.startsWith('Amortization')) { if (second) $('#amortType').value = second; }
+          else if (first.startsWith('Interest Rate')) {
+            const rate = parseFloat(second);
+            if (!isNaN(rate)) $('#interestRate').value = rate < 1 ? rate * 100 : rate;
+          }
+          else if (first.startsWith('Purchase Price')) { const v = parseFloat(second); if (!isNaN(v)) $('#purchasePrice').value = v; }
+          else if (first.startsWith('Term')) { const v = parseInt(second); if (!isNaN(v)) $('#termMonths').value = v; }
+          else if (first.startsWith('Down')) { const v = parseFloat(second); if (!isNaN(v)) $('#downPayment').value = v; }
+          else if (first.startsWith('Earnest')) { const v = parseFloat(second); if (!isNaN(v)) $('#earnestMoney').value = v; }
+        }
+
+        if (mode === 'itemization' && itemSection) {
+          const tableRows = $$(`#${itemSection} tbody tr`);
+          if (itemIdx < tableRows.length) {
+            const tr = tableRows[itemIdx];
+            const desc = row[1] || '';
+            const unitCost = parseFloat(row[2]);
+            const months = row[3];
+            const seller = parseFloat(row[5]);
+            const financed = row[6];
+
+            if (desc) { const d = tr.querySelector('.itemDesc'); if (d) d.value = desc; }
+            if (!isNaN(unitCost)) { const c = tr.querySelector('.itemCost'); if (c) c.value = unitCost; }
+            if (months !== '' && months !== undefined) { const m = tr.querySelector('.itemMonths'); if (m) m.value = months; }
+            if (!isNaN(seller)) { const s = tr.querySelector('.itemSeller'); if (s) s.value = seller; }
+            if (financed === true || financed === 'TRUE' || financed === 'true') {
+              const f = tr.querySelector('.itemFinanced'); if (f) f.checked = true;
+            }
+            itemIdx++;
+          }
+        }
+      });
+
+      recalculate();
+      showToast('File imported successfully!');
+    } catch (err) {
+      showToast('Import failed: ' + err.message, true);
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ===== Initialize Everything =====
+document.addEventListener('DOMContentLoaded', () => {
+  bindInputs();
+  recalculate();
+
+  $('#addIncome').addEventListener('click', addIncomeRow);
+  $('#addLiability').addEventListener('click', addLiabilityRow);
+  $('#btnReset').addEventListener('click', resetAll);
+  $('#btnExportXlsx').addEventListener('click', exportXLSX);
+  $('#btnExportCsv').addEventListener('click', exportCSV);
+  $('#btnImport').addEventListener('click', () => $('#fileInput').click());
+  $('#fileInput').addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      importFile(e.target.files[0]);
+      e.target.value = '';
+    }
+  });
+
+  document.addEventListener('input', validateInputs);
+});
+
+  </script>
+</body>
+</html>
