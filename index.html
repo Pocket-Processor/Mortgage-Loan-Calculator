@@ -1711,5 +1711,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
   </script>
+<script>
+  function sendHeight() {
+    const height = document.body.scrollHeight;
+    window.parent.postMessage({ type: "resize-sample", height }, "*");
+  }
+
+  window.addEventListener("load", sendHeight);
+  window.addEventListener("resize", sendHeight);
+  setInterval(sendHeight, 500); // catches dynamic changes
+</script>
 </body>
 </html>
